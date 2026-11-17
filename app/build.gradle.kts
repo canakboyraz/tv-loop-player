@@ -11,10 +11,10 @@ android {
         applicationId = "com.pion.tvloop"
         minSdk = 21
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
         // Varsayılan manifest adresi — uygulama içinden (MENU tuşu) değiştirilebilir
-        buildConfigField("String", "DEFAULT_MANIFEST_URL", "\"https://example.com/tv/manifest.json\"")
+        buildConfigField("String", "DEFAULT_MANIFEST_URL", "\"https://raw.githubusercontent.com/canakboyraz/tv-loop-player/main/manifest.json\"")
     }
     buildFeatures { buildConfig = true }
     buildTypes {

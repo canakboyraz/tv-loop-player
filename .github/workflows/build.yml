@@ -21,6 +21,10 @@ jobs:
           echo "ANDROID_HOME=$ANDROID_HOME"
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+      - name: Check video link (Drive)
+        continue-on-error: true
+        run: |
+          curl -sSL -r 0-1023 -o /dev/null -D - "https://drive.usercontent.google.com/download?id=1ybRoIH3urtYi1EzVrCC2sxs_ZGWmVU6g&export=download&confirm=t" | grep -iE "^HTTP|content-type|content-range|content-length"
       - run: gradle assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:

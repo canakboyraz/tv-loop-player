@@ -21,7 +21,7 @@ class SyncWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params) {
         return try {
             val manifest = JSONObject(httpGetText(Prefs.manifestUrl(c)))
             val remoteVersion = manifest.getLong("version")
-            val url = manifest.getString("url")
+            val url = normalizeUrl(manifest.getString("url"))
 
             if (remoteVersion <= Prefs.localVersion(c) && Prefs.videoFile(c).exists()) {
                 Prefs.setStatus(c, "Güncel (v$remoteVersion)")
@@ -64,6 +64,10 @@ class SyncWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params) {
         } else if (code != HttpURLConnection.HTTP_PARTIAL) {
             if (code == 416 && existing > 0) return // zaten tamamı inmiş
             throw IllegalStateException("HTTP $code")
+        }
+        val ctype = conn.contentType ?: ""
+        if (ctype.startsWith("text/html")) {
+            throw IllegalStateException("Link video değil, web sayfası döndü (Drive paylaşımı 'Bağlantıya sahip herkes' olmalı)")
         }
         val total = conn.getHeaderField("Content-Length")?.toLongOrNull()?.plus(existing) ?: -1L
 
@@ -117,6 +121,16 @@ class SyncWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params) {
         val c = open("$url${sep}t=${System.currentTimeMillis()}") // önbelleği atla
         c.useCaches = false
         return c.inputStream.bufferedReader().use { it.readText() }
+    }
+
+    /** Google Drive / Dropbox paylaşım linklerini doğrudan indirme linkine çevirir. */
+    private fun normalizeUrl(raw: String): String {
+        val u = raw.trim()
+        Regex("drive\\.google\\.com/(?:file/d/|open\\?id=|uc\\?(?:.*&)?id=)([A-Za-z0-9_-]+)").find(u)?.let {
+            return "https://drive.usercontent.google.com/download?id=${it.groupValues[1]}&export=download&confirm=t"
+        }
+        if (u.contains("dropbox.com")) return u.replace("dl=0", "dl=1")
+        return u
     }
 
     companion object {

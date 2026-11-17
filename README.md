@@ -25,6 +25,12 @@ Uygulama 15 dakikada bir küçük bir `manifest.json` dosyasına bakar:
 - **Video değiştirmek için:** yeni videoyu yükle, manifestteki `url`'yi güncelle ve `version`'ı 1 artır. TV en geç 15 dakika içinde yeni videoyu indirir. İndirme bitene kadar eski video oynamaya devam eder, bittiğinde yenisine geçer.
 - Bağlantı koparsa indirme kaldığı yerden devam eder (sunucu destekliyorsa).
 
+## Videoyu değiştirmek (bu kurulumda)
+GitHub'da reponun kökündeki `manifest.json` dosyasını aç, kalem simgesine tıkla:
+- `url`: Google Drive paylaşım linkini olduğu gibi yapıştırabilirsin. Dosyanın paylaşımı "Bağlantıya sahip olan herkes" olmalı.
+- `version`: her değişiklikte 1 artır.
+"Commit changes" dedikten sonra TV yeni videoyu en geç ~20 dakika içinde indirir.
+
 ## Manifest adresini ayarlama
 - TV'de kumandanın **MENU** tuşuna bas ya da **OK tuşuna uzun bas** → adresi gir → "Kaydet ve kontrol et".
 - Ya da derlemeden önce `app/build.gradle.kts` içindeki `DEFAULT_MANIFEST_URL` satırına kendi adresini yaz. Böylece TV'de hiçbir şey ayarlaman gerekmez.
