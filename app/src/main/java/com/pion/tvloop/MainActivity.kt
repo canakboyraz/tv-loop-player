@@ -73,6 +73,7 @@ class MainActivity : AppCompatActivity() {
 
         SyncWorker.schedule(this)
         SyncWorker.runNow(this)
+        KeepAliveService.start(this)
         askOverlayPermissionOnce()
     }
 
@@ -132,16 +133,32 @@ class MainActivity : AppCompatActivity() {
         val input = EditText(this).apply { setText(Prefs.manifestUrl(this@MainActivity)); setSingleLine() }
         AlertDialog.Builder(this)
             .setTitle("Manifest adresi")
-            .setMessage("Durum: ${Prefs.lastStatus(this)}\nYerel sürüm: ${Prefs.localVersion(this)}")
+            .setMessage("Durum: ${Prefs.lastStatus(this)}\nYerel sürüm: ${Prefs.localVersion(this)}\n" +
+                "Otomatik açılma izni: ${if (overlayGranted()) "VAR ✓" else "YOK ✗ (aşağıdaki 'İzin' butonu)"}")
             .setView(input)
             .setPositiveButton("Kaydet ve kontrol et") { _, _ ->
                 Prefs.setManifestUrl(this, input.text.toString())
                 SyncWorker.runNow(this)
             }
-            .setNeutralButton("Şimdi kontrol et") { _, _ -> SyncWorker.runNow(this) }
+            .setNeutralButton(if (overlayGranted()) "Şimdi kontrol et" else "İzin") { _, _ ->
+                if (overlayGranted()) SyncWorker.runNow(this) else openOverlaySettings()
+            }
             .setNegativeButton("Kapat", null)
             .setOnDismissListener { hideSystemUi() }
             .show()
+    }
+
+    private fun overlayGranted() = Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this)
+
+    private fun openOverlaySettings() {
+        val intents = listOf(
+            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")),
+            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION),
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+        )
+        for (i in intents) {
+            try { startActivity(i); return } catch (_: Exception) { }
+        }
     }
 
     private fun askOverlayPermissionOnce() {
@@ -149,9 +166,7 @@ class MainActivity : AppCompatActivity() {
         val sp = getSharedPreferences("tvloop", MODE_PRIVATE)
         if (sp.getBoolean("asked_overlay", false)) return
         sp.edit().putBoolean("asked_overlay", true).apply()
-        try {
-            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
-        } catch (_: Exception) { }
+        openOverlaySettings()
     }
 
     @Suppress("DEPRECATION")
